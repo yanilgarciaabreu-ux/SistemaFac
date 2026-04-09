@@ -33,7 +33,9 @@ function checkLoginStatus() {
 }
 
 function handleLogin(username, password) {
-    if (username === USERNAME_ADMIN && password === PASSWORD_ADMIN) {
+    const u = (username || '').trim().toLowerCase();
+    const p = (password || '').trim();
+    if (u === USERNAME_ADMIN.toLowerCase() && p === PASSWORD_ADMIN) {
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('userName', USER_NAME);
         document.getElementById('loginModal').style.display = 'none';
