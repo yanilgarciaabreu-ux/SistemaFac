@@ -8,7 +8,35 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="dashboard-layout">
+    <!-- Modal de Login -->
+    <div id="loginModal" class="login-modal" style="display: flex;">
+        <div class="login-container">
+            <div class="login-box">
+                <div class="login-brand">
+                    <div class="login-mark">SF</div>
+                    <div class="login-title">SistemaFac</div>
+                </div>
+                <h2>Iniciar Sesión</h2>
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label for="loginUser" class="form-label">Usuario</label>
+                        <input type="text" class="form-control" id="loginUser" placeholder="Ingrese su usuario" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="loginPassword" class="form-label">Contraseña</label>
+                        <input type="password" class="form-control" id="loginPassword" placeholder="Ingrese su contraseña" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Ingresar</button>
+                </form>
+                <div class="login-info mt-3">
+                    <p class="text-muted">Usuario: <strong>reyna</strong></p>
+                    <p class="text-muted">Contraseña: <strong>123456</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-layout" id="dashboardLayout" style="display: none;">
         <aside class="dashboard-sidebar">
             <div class="sidebar-brand">
                 <div class="brand-mark">SF</div>
@@ -20,6 +48,7 @@
             <nav class="sidebar-menu">
                 <a class="sidebar-link active" href="#dashboard">Dashboard</a>
                 <a class="sidebar-link" href="#productos">Productos</a>
+                <a class="sidebar-link" href="#cajaChica">Caja Chica</a>
                 <a class="sidebar-link" href="#presupuestos">Presupuestos</a>
                 <a class="sidebar-link" href="#facturas">Facturas</a>
                 <a class="sidebar-link" href="#pagos">Pagos & Ajustes</a>
@@ -35,6 +64,7 @@
         <main class="dashboard-main">
             <header class="dashboard-topbar">
                 <div>
+                    <p class="user-greeting" id="userGreeting">Reyna Yanil García</p>
                     <p class="dashboard-badge">Panel de control</p>
                     <h1>Bienvenido, administrador</h1>
                 </div>
@@ -44,10 +74,11 @@
                     </div>
                     <div class="topbar-user">
                         <div>
-                            <strong>Oleo Bone</strong>
+                            <strong id="userNameDisplay">Reyna Yanil García</strong>
                             <p class="text-muted mb-0">Administrador</p>
                         </div>
-                        <div class="user-avatar">OB</div>
+                        <div class="user-avatar" id="userAvatarDisplay">RY</div>
+                        <button id="logoutBtn" class="btn btn-sm btn-outline-danger ms-2" style="border-radius: 5px; padding: 5px 10px;">Salir</button>
                     </div>
                 </div>
             </header>
@@ -151,6 +182,68 @@
                         <th>Nombre</th>
                         <th>Precio</th>
                         <th>Stock</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+
+        <section id="cajaChica" class="section-card mb-5">
+            <h2>Caja Chica</h2>
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <span class="label">Fondo Inicial</span>
+                        <div class="value" id="fondoInicial">$2,000.00</div>
+                        <div class="subtext">Fondo disponible</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <span class="label">Total Gastado</span>
+                        <div class="value" id="totalGastado">$0.00</div>
+                        <div class="subtext">Gastos registrados</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <span class="label">Saldo Disponible</span>
+                        <div class="value" id="saldoDisponible">$2,000.00</div>
+                        <div class="subtext">Dinero disponible</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <span class="label">Total Movimientos</span>
+                        <div class="value" id="totalMovimientos">0</div>
+                        <div class="subtext">Gastos registrados</div>
+                    </div>
+                </div>
+            </div>
+
+            <form id="formCajaChica" class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <input type="text" id="conceptoCajaChica" class="form-control" placeholder="Concepto del gasto" required>
+                </div>
+                <div class="col-md-4">
+                    <input type="number" id="montoCajaChica" class="form-control" placeholder="Monto" step="0.01" min="0" required>
+                </div>
+                <div class="col-md-3">
+                    <input type="date" id="fechaCajaChica" class="form-control" required>
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-success w-100">Agregar</button>
+                </div>
+            </form>
+
+            <table class="table table-striped mt-3" id="tablaCajaChica">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Concepto</th>
+                        <th>Monto</th>
+                        <th>Saldo Restante</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>

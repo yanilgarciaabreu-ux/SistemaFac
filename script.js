@@ -12,6 +12,101 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// ===== AUTENTICACIÓN Y LOGIN =====
+const USERNAME_ADMIN = 'reyna';
+const PASSWORD_ADMIN = '123456';
+const USER_NAME = 'Reyna Yanil García';
+
+// Funciones de Login
+function checkLoginStatus() {
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    const loginModal = document.getElementById('loginModal');
+    const dashboardLayout = document.getElementById('dashboardLayout');
+    
+    if (isLoggedIn === 'true') {
+        loginModal.style.display = 'none';
+        dashboardLayout.style.display = 'flex';
+    } else {
+        loginModal.style.display = 'flex';
+        dashboardLayout.style.display = 'none';
+    }
+}
+
+function handleLogin(username, password) {
+    if (username === USERNAME_ADMIN && password === PASSWORD_ADMIN) {
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userName', USER_NAME);
+        document.getElementById('loginModal').style.display = 'none';
+        document.getElementById('dashboardLayout').style.display = 'flex';
+        updateUserDisplay();
+        return true;
+    } else {
+        alert('Usuario o contraseña incorrectos');
+        return false;
+    }
+}
+
+function handleLogout() {
+    localStorage.setItem('isLoggedIn', 'false');
+    localStorage.removeItem('userName');
+    document.getElementById('dashboardLayout').style.display = 'none';
+    document.getElementById('loginModal').style.display = 'flex';
+    document.getElementById('loginForm').reset();
+}
+
+function updateUserDisplay() {
+    const userName = localStorage.getItem('userName') || USER_NAME;
+    document.getElementById('userNameDisplay').textContent = userName;
+    document.getElementById('userGreeting').textContent = userName;
+    
+    // Generar iniciales
+    const names = userName.split(' ');
+    let initials = '';
+    if (names.length >= 2) {
+        initials = (names[0][0] + names[names.length - 1][0]).toUpperCase();
+    } else {
+        initials = names[0].substring(0, 2).toUpperCase();
+    }
+    document.getElementById('userAvatarDisplay').textContent = initials;
+}
+
+// Event Listeners para Login
+document.addEventListener('DOMContentLoaded', function() {
+    checkLoginStatus();
+    
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUser').value;
+            const password = document.getElementById('loginPassword').value;
+            handleLogin(username, password);
+        });
+    }
+    
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (confirm('¿Desea cerrar sesión?')) {
+                handleLogout();
+            }
+        });
+    }
+    
+    // Llamar a updateUserDisplay al cargar
+    updateUserDisplay();
+    
+    // Inicializar Caja Chica
+    initCajaChica();
+    
+    // Establecer fecha de hoy por defecto en caja chica
+    const fechaCajaChicaInput = document.getElementById('fechaCajaChica');
+    if (fechaCajaChicaInput) {
+        fechaCajaChicaInput.valueAsDate = new Date();
+    }
+});
+
 // Productos
 document.getElementById('formProducto').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -75,6 +170,103 @@ async function deleteProducto(id) {
         loadProductos();
     }
 }
+
+// ===== CAJA CHICA =====
+const FONDO_INICIAL_CAJA_CHICA = 2000;
+
+function initCajaChica() {
+    // Inicializar caja chica en localStorage si no existe
+    const cajaChicaData = localStorage.getItem('cajaChica');
+    if (!cajaChicaData) {
+        const cajaChicaInit = {
+            fondoInicial: FONDO_INICIAL_CAJA_CHICA,
+            movimientos: []
+        };
+        localStorage.setItem('cajaChica', JSON.stringify(cajaChicaInit));
+    }
+    loadCajaChica();
+}
+
+function getCajaChicaData() {
+    const data = localStorage.getItem('cajaChica');
+    return data ? JSON.parse(data) : { fondoInicial: FONDO_INICIAL_CAJA_CHICA, movimientos: [] };
+}
+
+function loadCajaChica() {
+    const cajaChica = getCajaChicaData();
+    const tbody = document.querySelector('#tablaCajaChica tbody');
+    tbody.innerHTML = '';
+    
+    let totalGastado = 0;
+    let saldoRestante = cajaChica.fondoInicial;
+    
+    cajaChica.movimientos.forEach((mov, index) => {
+        totalGastado += mov.monto;
+        saldoRestante -= mov.monto;
+        
+        tbody.innerHTML += `<tr>
+            <td>${mov.fecha}</td>
+            <td>${mov.concepto}</td>
+            <td>$${mov.monto.toFixed(2)}</td>
+            <td>$${saldoRestante.toFixed(2)}</td>
+            <td>
+                <button class="btn btn-sm btn-delete" onclick="deleteCajaChicaMovimiento(${index})">Eliminar</button>
+            </td>
+        </tr>`;
+    });
+    
+    // Actualizar totales
+    document.getElementById('fondoInicial').textContent = `$${cajaChica.fondoInicial.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    document.getElementById('totalGastado').textContent = `$${totalGastado.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    document.getElementById('saldoDisponible').textContent = `$${saldoRestante.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    document.getElementById('totalMovimientos').textContent = cajaChica.movimientos.length;
+}
+
+function addMovimientoCajaChica(concepto, monto, fecha) {
+    const cajaChica = getCajaChicaData();
+    
+    // Validar que no supere el saldo disponible
+    let totalGastado = cajaChica.movimientos.reduce((sum, mov) => sum + mov.monto, 0);
+    if ((totalGastado + monto) > cajaChica.fondoInicial) {
+        alert('Monto supera el saldo disponible en caja chica');
+        return false;
+    }
+    
+    cajaChica.movimientos.push({
+        concepto,
+        monto,
+        fecha,
+        id: Date.now()
+    });
+    
+    localStorage.setItem('cajaChica', JSON.stringify(cajaChica));
+    loadCajaChica();
+    return true;
+}
+
+function deleteCajaChicaMovimiento(index) {
+    if (confirm('¿Eliminar este movimiento?')) {
+        const cajaChica = getCajaChicaData();
+        cajaChica.movimientos.splice(index, 1);
+        localStorage.setItem('cajaChica', JSON.stringify(cajaChica));
+        loadCajaChica();
+    }
+}
+
+document.getElementById('formCajaChica').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const concepto = document.getElementById('conceptoCajaChica').value;
+    const monto = parseFloat(document.getElementById('montoCajaChica').value);
+    const fecha = document.getElementById('fechaCajaChica').value;
+    
+    if (monto > 0) {
+        if (addMovimientoCajaChica(concepto, monto, fecha)) {
+            this.reset();
+            // Establecer fecha de hoy por defecto
+            document.getElementById('fechaCajaChica').valueAsDate = new Date();
+        }
+    }
+});
 
 // Presupuestos
 let presupuestoActual = null;
